@@ -1,10 +1,10 @@
 from multiprocessing import context
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponseRedirect
 from .models import Question, Answer 
-from .forms import NewAnswerForm
+from .forms import NewAnswerForm,PostSearchForm
 from django.views.generic import ListView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
+from django.db.models import Q
 
 def home(request):
 
@@ -49,3 +49,30 @@ def post_single(request, post):
     return render(request, 'forum/single.html', context )
 
  
+
+
+
+def post_search(request):
+    form = PostSearchForm()
+    q = ''
+    results = []
+    query = Q()
+
+    if 'q' in request.GET:
+        form = PostSearchForm(request.GET)
+        if form.is_valid():
+            q = form.cleaned_data['q']
+
+            if q is not None:
+                query = Q(title__contains=q)
+
+            results = Question.objects.filter(query)
+    
+    context={
+        'form': form,
+        'q': q,
+        'results': results
+    }
+
+    return render(request, 'forum/search.html',context)
+
