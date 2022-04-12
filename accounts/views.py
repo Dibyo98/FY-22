@@ -1,6 +1,6 @@
 from email.mime import image
 from urllib.request import Request
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from django.views import View
 from .models import UserProfile,ThreadModel,MessageModel
 from .forms import *
@@ -11,7 +11,9 @@ from django.http import HttpResponseRedirect,HttpResponse
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from forum.models import Question
 # Create your views here.
 
 def show(request):
@@ -195,6 +197,20 @@ class CreateMessage(View):
 
         return redirect('thread', pk=pk)
 
+@ login_required
+def favourite_add(request, id):
+    post = get_object_or_404(Question, id=id)
+    if post.favourites.filter(id=request.user.id).exists():
+        post.favourites.remove(request.user)
+    else:
+        post.favourites.add(request.user)
+    return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+@ login_required
+def favourite_list(request):
+    new = Question.newmanager.filter(favourites=request.user)
+    return render(request,'accounts/favourite.html',{'new': new})
 
 
 

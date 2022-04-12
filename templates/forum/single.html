@@ -25,6 +25,24 @@
 
     <div class="col-md-7">
       <h1>{{post.title}}</h1>
+
+      {% if request.user.is_authenticated %}
+
+        {% if fav %}
+        <div>
+          <a href="{% url 'favourite_add' post.id %}" class="">Remove
+            Favourties</a>
+        </div>
+        {% else %}
+        <div>
+          <a href="{% url 'favourite_add' post.id %}" class="">Add to
+            Favourties</a>
+        </div>
+        {% endif %}
+    
+      {% endif %}
+
+
     </div>
     <!-- <div class="col-md-9"><img class="card-img-top" src="{{post.image.url}}" alt="{{ post.title }}"></div> -->
     <div class="col-md-7">

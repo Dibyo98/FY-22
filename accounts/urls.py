@@ -1,3 +1,6 @@
+from unicodedata import name
+from django import views
+from . import views as custom_view
 from django.urls import path
 from .views import (
     show,
@@ -25,7 +28,10 @@ urlpatterns =[
     path('inbox/create-thread/', CreateThread.as_view(), name='create-thread'),
     path('inbox/<int:pk>/', ThreadView.as_view(), name='thread'),
     path('inbox/<int:pk>/create-message/', CreateMessage.as_view(), name='create-message'),
-    
+
+    path('fav/<int:id>/', custom_view.favourite_add, name='favourite_add'),   
+    path('profile/favourites/', custom_view.favourite_list, name='favourite_list'),
+  
 ]
 
 
