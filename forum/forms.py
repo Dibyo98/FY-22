@@ -1,5 +1,5 @@
 from django import forms
-from .models import Answer
+from .models import Answer, Question
 from mptt.forms import TreeNodeChoiceField
 
 
@@ -16,7 +16,7 @@ class NewAnswerForm(forms.ModelForm):
 
     class Meta:
         model = Answer
-        fields = ('name', 'parent', 'content')
+        fields = ('parent', 'content')
 
         widgets = {
             'name': forms.TextInput(attrs={'class': 'col-sm-12'}),
@@ -38,3 +38,11 @@ class PostSearchForm(forms.Form):
         self.fields['q'].label = 'Search For'
         self.fields['q'].widget.attrs.update(
             {'class': 'form-control'})
+
+
+class QuestionForm(forms.ModelForm):
+    
+    class Meta:
+        model=Question
+        fields=['title','content']
+        

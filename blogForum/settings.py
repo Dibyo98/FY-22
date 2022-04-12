@@ -123,6 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -167,4 +168,4 @@ EMAIL_USE_TLS = True
 
 TAGGIT_CASE_INSENSITIVE = True
 
-
+AWS_QUERYSTRING_AUTH = False

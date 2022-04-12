@@ -1,3 +1,5 @@
+{% load static %}
+
 <!doctype html>
 <html lang="en">
 
@@ -9,6 +11,8 @@
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
     integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  
+    <link rel='stylesheet' type="text/css" media="screen" href="{% static 'css/forum.css' %}">
 
   <title>{% block title %} Welcome to blog {% endblock %}</title>
 
@@ -26,8 +30,12 @@
       <ul class="navbar-nav mr-auto">
         <li class="nav-item active">
           <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-        </li>
+        </li> 
         
+        <li class="nav-item active">
+          <a class="nav-link" href="{% url 'forum:ask_question' %}">Ask Doubt <span class="sr-only">(current)</span></a>
+        </li>
+
       </ul>
       <form class="form-inline my-2 my-lg-0" action="{% url 'forum:post_search' %}" method="get">
         <input class="form-control mr-sm-2" name="q" type="search" placeholder="Search" aria-label="Search" required>

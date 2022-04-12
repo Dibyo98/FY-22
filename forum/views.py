@@ -2,11 +2,14 @@ from multiprocessing import context
 from turtle import pos
 from django.shortcuts import render, get_object_or_404, redirect, HttpResponseRedirect
 from .models import Question, Answer 
-from .forms import NewAnswerForm,PostSearchForm
+from .forms import NewAnswerForm,PostSearchForm,QuestionForm
 from django.views.generic import ListView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
+
 
 def home(request):
 
@@ -41,6 +44,7 @@ def post_single(request, post):
         if comment_form.is_valid():
             user_comment = comment_form.save(commit=False)
             user_comment.post = post
+            user_comment.author=request.user
             user_comment.save()
             return redirect(post.get_absolute_url())
     else:
@@ -82,4 +86,70 @@ def post_search(request):
     }
 
     return render(request, 'forum/search.html',context)
+
+@login_required
+def post_create(request):
+    form = QuestionForm(request.POST or None, request.FILES or None)
+    if form.is_valid():
+        instance = form.save(commit=False)
+        instance.author = request.user
+        instance.save()
+        form.save_m2m()
+      
+        messages.success(request, "Successfully Created")
+        return redirect(instance.get_absolute_url())
+    context = {
+        "form": form,
+        'page': 'new-post',
+      
+    }
+    return render(request, "forum/post_form.html", context)
+
+
+
+
+@login_required
+def post_edit(request, post):
+
+    page = 'post-edit'
+    p = get_object_or_404(Question, slug=post, status='published')
+    if p.author.id != request.user.id:
+        raise PermissionDenied
+    form = QuestionForm(instance=p)
+
+    if request.method == 'POST':
+        form = QuestionForm(request.POST,
+                        request.FILES,
+                        instance=p)
+        if form.is_valid():
+            form.save()
+            
+            messages.success(request, f'Post Updated')
+            return redirect(p.get_absolute_url())
+
+    else:
+        form = QuestionForm(instance=p)
+
+    context = {
+        'form': form,
+        'page': page,
+        'post': p,
+    }
+
+    return render(request, 'forum/post_form.html', context)
+
+@login_required
+def deletePost(request, post):
+    # p=Post.objects.get(slug=slug)
+
+    p = get_object_or_404(Question, slug=post, status='published')
+    if p.author.id != request.user.id:
+        raise PermissionDenied
+
+    if request.method == 'POST':
+        p.delete()
+        return redirect('forum:homepage')
+
+    context = {'object': p}
+    return render(request, 'forum/post_delete.html', context)
 

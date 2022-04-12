@@ -1,5 +1,6 @@
 {% extends "forum/base.html" %}
-
+{% load crispy_forms_tags %}
+{{comment_form.media}}
 {% block title %}
 {{post.title}}
 {% endblock %}
@@ -25,23 +26,25 @@
 
     <div class="col-md-7">
       <h1>{{post.title}}</h1>
+      <a href="{% url 'forum:edit_question' post.slug  %}">Edit</a>
+      <a href="{% url 'forum:del_question' post.slug  %}">Delete</a>
 
       {% if request.user.is_authenticated %}
 
-        {% if fav %}
-        <div>
-          <a href="{% url 'favourite_add' post.id %}" class="">Remove
-            Favourties</a>
-        </div>
-        {% else %}
-        <div>
-          <a href="{% url 'favourite_add' post.id %}" class="">Add to
-            Favourties</a>
-        </div>
-        {% endif %}
-    
+      {% if fav %}
+      <div>
+        <a href="{% url 'favourite_add' post.id %}" class="">Remove
+          Favourties</a>
+      </div>
+      {% else %}
+      <div>
+        <a href="{% url 'favourite_add' post.id %}" class="">Add to
+          Favourties</a>
+      </div>
       {% endif %}
 
+      
+      {% endif %}
 
     </div>
     <!-- <div class="col-md-9"><img class="card-img-top" src="{{post.image.url}}" alt="{{ post.title }}"></div> -->
@@ -62,15 +65,15 @@
         {% recursetree comments %}
         <div id="{{ node.id }}" class="my-2 p-2" style="border: 1px solid grey">
           <div class="d-flex justify-content-between">By {{ node.name }}<div></div>{{ node.publish }}</div>
-          <div>{{ node.content }}</div>
-          <hr />
+          <div>{{ node.content|safe }}</div>
+          <hr />  
           {% if node.level < 5 %}
           <button class="button" onclick="myFunction({{ node.id }})">Reply</button>
           {% endif %}
         </div>
         {% if not node.is_leaf_node %}
         <div class="children pl-2 pl-md-5">
-          {{ children }}
+          {{ children|safe }}
         </div>
         {% endif %}
         {% endrecursetree %}
@@ -107,8 +110,10 @@
       <div id="myDIV" style="display:block;">
         <form id="myForm" method="post">
           <h2>Create new comment</h2>
-          {{ comment_form.as_p }}
           {% csrf_token %}
+          {{comment_form.media}}
+          {{ comment_form|crispy }}
+          
           <button type="submit" class="btn btn-primary btn-lg btn-block">Submit</button>
         </form>
       </div>
