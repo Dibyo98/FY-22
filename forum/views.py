@@ -44,7 +44,8 @@ def post_single(request, post):
         if comment_form.is_valid():
             user_comment = comment_form.save(commit=False)
             user_comment.post = post
-            user_comment.author=request.user
+            user_comment.name=request.user
+            print(user_comment.name)
             user_comment.save()
             return redirect(post.get_absolute_url())
     else:
@@ -93,6 +94,7 @@ def post_create(request):
     if form.is_valid():
         instance = form.save(commit=False)
         instance.author = request.user
+        print(instance.author)
         instance.save()
         form.save_m2m()
       

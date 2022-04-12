@@ -1,3 +1,4 @@
+from unicodedata import name
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
@@ -46,7 +47,8 @@ class Answer(MPTTModel):
     post = models.ForeignKey(Question,
                              on_delete=models.CASCADE,
                              related_name='comments')
-    name = models.CharField(max_length=50)
+    name = models.ForeignKey(
+        User, on_delete=models.CASCADE,related_name='forum_ans')
     parent = TreeForeignKey('self', on_delete=models.CASCADE,
                             null=True, blank=True, related_name='children')
     content = RichTextField()
@@ -57,7 +59,7 @@ class Answer(MPTTModel):
         order_insertion_by = ['publish']
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
 
 from blog.utils import unique_slug_generator
