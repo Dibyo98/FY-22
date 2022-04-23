@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from forum.models import Question
+#from forum.models import Question
 # Create your views here.
 
 def show(request):

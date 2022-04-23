@@ -1,0 +1,40 @@
+.page {
+    width: 80%;
+    margin: auto;
+}
+
+.question-list-item-title {
+    font-size: 2em;
+    color: black;
+}
+
+a.question-link {
+    text-decoration: none;
+}
+
+a.question-link:hover {
+    font-size: 1.5em;
+}
+
+blockquote.reply {
+    padding-left: 2px;
+    margin: 5px 0px 5px 2px;
+    border-left: 5px;
+    border-top: 0px;
+    border-right: 0px;
+    border-bottom: 0px;
+    border-color: lightgray;
+    border-style: solid;
+}
+
+.reply-btn {
+    margin-left: 5px;
+}
+
+.reply-form-container {
+    display: none;
+}
+
+.reply-form-container.enabled {
+    display: block;
+}

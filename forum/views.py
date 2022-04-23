@@ -1,157 +1,84 @@
-from multiprocessing import context
-from turtle import pos
-from django.shortcuts import render, get_object_or_404, redirect, HttpResponseRedirect
-from .models import Question, Answer 
-from .forms import NewAnswerForm,PostSearchForm,QuestionForm
-from django.views.generic import ListView
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.core.exceptions import PermissionDenied
+from .models import Question, Response
+from .forms import NewQuestionForm, NewResponseForm, NewReplyForm
 
+# Create your views here.
 
-def home(request):
-
-    all_posts = Question.newmanager.all()
-
-    return render(request, 'forum/index.html', {'posts': all_posts})
-
-@login_required
-def post_single(request, post):
-
-    post = get_object_or_404(Question, slug=post, status='published')
-    fav=False
-    if post.favourites.filter(id=request.user.id).exists():
-        fav=True
-
-
-    allcomments = post.comments.filter(status=True)
-    page = request.GET.get('page', 1)
-
-    paginator = Paginator(allcomments, 50)
-    try:
-        comments = paginator.page(page)
-    except PageNotAnInteger:
-        comments = paginator.page(1)
-    except EmptyPage:
-        comments = paginator.page(paginator.num_pages)
-
-    user_comment = None
-
-    if request.method == 'POST':
-        comment_form = NewAnswerForm(request.POST)
-        if comment_form.is_valid():
-            user_comment = comment_form.save(commit=False)
-            user_comment.post = post
-            user_comment.name=request.user
-            print(user_comment.name)
-            user_comment.save()
-            return redirect(post.get_absolute_url())
-    else:
-        comment_form = NewAnswerForm()
-    context= {
-        'post': post, 
-        'comments':  user_comment, 
-        'comments': comments, 
-        'comment_form': comment_form, 
-        'allcomments': allcomments, 
-        'fav':fav,
-    }
-    return render(request, 'forum/single.html', context )
-
- 
-
-
-
-def post_search(request):
-    form = PostSearchForm()
-    q = ''
-    results = []
-    query = Q()
-
-    if 'q' in request.GET:
-        form = PostSearchForm(request.GET)
-        if form.is_valid():
-            q = form.cleaned_data['q']
-
-            if q is not None:
-                query = Q(title__contains=q)
-
-            results = Question.objects.filter(query)
-    
-    context={
-        'form': form,
-        'q': q,
-        'results': results
-    }
-
-    return render(request, 'forum/search.html',context)
-
-@login_required
-def post_create(request):
-    form = QuestionForm(request.POST or None, request.FILES or None)
-    if form.is_valid():
-        instance = form.save(commit=False)
-        instance.author = request.user
-        print(instance.author)
-        instance.save()
-        form.save_m2m()
-      
-        messages.success(request, "Successfully Created")
-        return redirect(instance.get_absolute_url())
+def homepage(request):
+    questions = Question.objects.all().order_by('-created_at')
     context = {
-        "form": form,
-        'page': 'new-post',
-      
+        'questions': questions
     }
-    return render(request, "forum/post_form.html", context)
+    return render(request, 'homepage.html', context)
 
 
+def questionspage(request, id):
+    return None
 
 
-@login_required
-def post_edit(request, post):
-
-    page = 'post-edit'
-    p = get_object_or_404(Question, slug=post, status='published')
-    if p.author.id != request.user.id:
-        raise PermissionDenied
-    form = QuestionForm(instance=p)
+@login_required(login_url='/accounts/signup')
+def newquestionpage(request):
+    form = NewQuestionForm()
 
     if request.method == 'POST':
-        form = QuestionForm(request.POST,
-                        request.FILES,
-                        instance=p)
-        if form.is_valid():
-            form.save()
-            
-            messages.success(request, f'Post Updated')
-            return redirect(p.get_absolute_url())
-
-    else:
-        form = QuestionForm(instance=p)
+        try:
+            form = NewQuestionForm(request.POST)
+            if form.is_valid():
+                question = form.save(commit=False)
+                question.author = request.user
+                question.save()
+        except Exception as e:
+            print(e)
+            raise
 
     context = {
-        'form': form,
-        'page': page,
-        'post': p,
+        'form': form
     }
+    return render(request, 'new-question.html', context)
 
-    return render(request, 'forum/post_form.html', context)
 
-@login_required
-def deletePost(request, post):
-    # p=Post.objects.get(slug=slug)
-
-    p = get_object_or_404(Question, slug=post, status='published')
-    if p.author.id != request.user.id:
-        raise PermissionDenied
+def questionpage(request, id):
+    response_form = NewResponseForm()
+    reply_form = NewReplyForm()
 
     if request.method == 'POST':
-        p.delete()
-        return redirect('forum:homepage')
+        try:
+            response_form = NewResponseForm(request.POST)
+            if response_form.is_valid():
+                response = response_form.save(commit=False)
+                response.user = request.user
+                response.question = Question(id=id)
+                response.save()
+                return redirect('/ask/question/' + str(id) + '#' + str(response.id))
+        except Exception as e:
+            print(e)
+            raise
 
-    context = {'object': p}
-    return render(request, 'forum/post_delete.html', context)
+    question = Question.objects.get(id=id)
+    context = {
+        'question': question,
+        'response_form': response_form,
+        'reply_form': reply_form
+    }
+    return render(request, 'question.html', context)
 
+@login_required(login_url='/accounts/signup')
+def replypage(request):
+    if request.method == "POST":
+        try:
+            form = NewReplyForm(request.POST)
+            if form.is_valid():
+                question_id = request.POST.get('question')
+                parent_id = request.POST.get('parent')
+                reply = form.save(commit=False)
+                reply.user = request.user
+                reply.question = Question(id=question_id)
+                reply.parent = Response(id=parent_id)
+                reply.save()
+                return redirect('/ask/question/' + str(question_id) + '#' + str(reply.id))
+        except Exception as e:
+            print(e)
+            raise
+
+    return redirect('/ask/')
